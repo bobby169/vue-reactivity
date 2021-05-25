@@ -8,7 +8,12 @@ describe('reactivity/reactive', () => {
     const original = { foo: 1 }
     const observed = reactive(original)
     observed.foo = 2
-    console.log(observed.foo)
+    console.log(
+      observed.foo,
+      original.foo,
+      observed.foo === original.foo,
+      'observed.foo ===original.foo'
+    )
     expect(observed).not.toBe(original)
     effect(() => console.log(observed.foo))
     // effect(() => console.log(222))

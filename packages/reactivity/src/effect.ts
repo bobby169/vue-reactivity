@@ -89,6 +89,7 @@ function createReactiveEffect<T = any>(
     if (!effectStack.includes(effect)) {
       cleanup(effect)
       try {
+        // 开启tracking shouldTrack = true
         enableTracking()
         effectStack.push(effect)
         activeEffect = effect
@@ -186,6 +187,7 @@ export function trigger(
     return
   }
 
+  // 用来保存所有定义的effect方法
   const effects = new Set<ReactiveEffect>()
   const add = (effectsToAdd: Set<ReactiveEffect> | undefined) => {
     if (effectsToAdd) {
@@ -261,5 +263,6 @@ export function trigger(
     }
   }
 
+  // 只要在handler中的set中值有变化，或数组值有增添，会遍历执行effets中的effect()方法
   effects.forEach(run)
 }

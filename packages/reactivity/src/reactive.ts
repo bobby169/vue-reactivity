@@ -1,7 +1,7 @@
 import { isObject, toRawType, def } from '@vue/shared'
 import {
-  mutableHandlers,
-  readonlyHandlers,
+  mutableHandlers, // 可变数据的代理劫持方法
+  readonlyHandlers, // 只读数据的代理劫持方法
   shallowReactiveHandlers,
   shallowReadonlyHandlers
 } from './baseHandlers'
@@ -29,6 +29,7 @@ export interface Target {
   [ReactiveFlags.RAW]?: any
 }
 
+// 利用WeakMap是为了更好的减少内存开销
 export const reactiveMap = new WeakMap<Target, any>()
 export const shallowReactiveMap = new WeakMap<Target, any>()
 export const readonlyMap = new WeakMap<Target, any>()
@@ -40,6 +41,11 @@ const enum TargetType {
   COLLECTION = 2
 }
 
+/**
+ * 只有下面的白名单才能设置reactive，并判断target是否是COLLECTION，以便proxy调用COLLECTION数据代理
+ * @param rawType
+ * @returns
+ */
 function targetTypeMap(rawType: string) {
   switch (rawType) {
     case 'Object':
@@ -196,6 +202,7 @@ function createReactiveObject(
     return target
   }
   // target already has corresponding Proxy
+  // 已经在proxyMap中有代理方法直接返回代理
   const existingProxy = proxyMap.get(target)
   if (existingProxy) {
     return existingProxy
