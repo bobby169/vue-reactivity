@@ -137,11 +137,19 @@ export function resetTracking() {
   const last = trackStack.pop()
   shouldTrack = last === undefined ? true : last
 }
-
+/**
+ * 对target值的变化进行追踪，此函数放到handler的set中
+ * @param target
+ * @param type
+ * @param key
+ * @returns
+ */
 export function track(target: object, type: TrackOpTypes, key: unknown) {
+  // console.log(shouldTrack, activeEffect, 'shouldTrack')
   if (!shouldTrack || activeEffect === undefined) {
     return
   }
+  console.log('proxy后有effect函数，且函数中有proxy时才会tracking')
   let depsMap = targetMap.get(target)
   if (!depsMap) {
     targetMap.set(target, (depsMap = new Map()))

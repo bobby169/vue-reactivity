@@ -16,6 +16,7 @@ import { UnwrapRef, Ref } from './ref'
 export const enum ReactiveFlags {
   SKIP = '__v_skip',
   IS_REACTIVE = '__v_isReactive',
+  IS_REACTIVE2 = '__v_isReactive2',
   IS_READONLY = '__v_isReadonly',
   RAW = '__v_raw'
 }
@@ -23,6 +24,7 @@ export const enum ReactiveFlags {
 export interface Target {
   [ReactiveFlags.SKIP]?: boolean
   [ReactiveFlags.IS_REACTIVE]?: boolean
+  [ReactiveFlags.IS_REACTIVE2]?: boolean
   [ReactiveFlags.IS_READONLY]?: boolean
   [ReactiveFlags.RAW]?: any
 }
@@ -183,6 +185,8 @@ function createReactiveObject(
     }
     return target
   }
+
+  // 通过标记判断target是否已经是Proxy，是则返回
   // target is already a Proxy, return it.
   // exception: calling readonly() on a reactive object
   if (
@@ -201,11 +205,29 @@ function createReactiveObject(
   if (targetType === TargetType.INVALID) {
     return target
   }
+  // 关键代码设置Proxy
   const proxy = new Proxy(
     target,
     targetType === TargetType.COLLECTION ? collectionHandlers : baseHandlers
   )
   proxyMap.set(target, proxy)
+
+  console.info(
+    target[ReactiveFlags.IS_REACTIVE],
+    'target[ReactiveFlags.IS_REACTIVE]'
+  ) // undefined
+  // 思考，这里的proxy[ReactiveFlags.IS_REACTIVE]是怎么产生的？
+  // proxy原本是没有ReactiveFlags.IS_REACTIVE这个key的，通过get获取proxy属性就会传这个key到hander中
+  // console.info(
+  //   proxy[ReactiveFlags.IS_REACTIVE2],
+  //   'proxy[ReactiveFlags.IS_REACTIVE2]'
+  // ) // true
+  console.info(
+    proxy[ReactiveFlags.IS_REACTIVE],
+    'proxy[ReactiveFlags.IS_REACTIVE]'
+  )
+  console.info(proxy[ReactiveFlags.RAW], 'proxy[ReactiveFlags.RAW]')
+  console.info(proxy[ReactiveFlags.SKIP], 'proxy[ReactiveFlags.SKIP]')
   return proxy
 }
 

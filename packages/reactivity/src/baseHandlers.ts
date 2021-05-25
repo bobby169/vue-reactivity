@@ -76,10 +76,14 @@ const arrayInstrumentations: Record<string, Function> = {}
 
 function createGetter(isReadonly = false, shallow = false) {
   return function get(target: Target, key: string | symbol, receiver: object) {
+    // 这里能传入我写的__v_isReactive2
+    console.log(key, 'GetKey')
+    console.log(receiver, 'receiver')
     if (key === ReactiveFlags.IS_REACTIVE) {
-      return !isReadonly
+      console.log('判断当前target是否是proxy')
+      return !isReadonly // 返回proxy[ReactiveFlags.IS_REACTIVE] = true
     } else if (key === ReactiveFlags.IS_READONLY) {
-      return isReadonly
+      return isReadonly // 返回proxy[ReactiveFlags.IS_READONLY] = false
     } else if (
       key === ReactiveFlags.RAW &&
       receiver ===
@@ -101,26 +105,32 @@ function createGetter(isReadonly = false, shallow = false) {
       return Reflect.get(arrayInstrumentations, key, receiver)
     }
 
+    // 获取对象身上某个属性的值，类似于 target[name]。
     const res = Reflect.get(target, key, receiver)
+    console.log(res, key, 'res')
 
     if (isSymbol(key) ? builtInSymbols.has(key) : isNonTrackableKeys(key)) {
       return res
     }
 
+    // 如果target非只读，则进行追踪target新值的变化
     if (!isReadonly) {
       track(target, TrackOpTypes.GET, key)
     }
 
+    // 如果是shallow浅的，直接返回proxy
     if (shallow) {
       return res
     }
 
+    // 如果是ref对象，则进行展开res.value
     if (isRef(res)) {
       // ref unwrapping - does not apply for Array + integer key.
       const shouldUnwrap = !targetIsArray || !isIntegerKey(key)
       return shouldUnwrap ? res.value : res
     }
 
+    // 如果返回的proxy还是object对象，则递归执行reactive
     if (isObject(res)) {
       // Convert returned value into a proxy as well. we do the isObject check
       // here to avoid invalid value warning. Also need to lazy access readonly
@@ -158,6 +168,7 @@ function createSetter(shallow = false) {
       isArray(target) && isIntegerKey(key)
         ? Number(key) < target.length
         : hasOwn(target, key)
+    console.log(key, 'SetKey')
     const result = Reflect.set(target, key, value, receiver)
     // don't trigger if target is something up in the prototype chain of original
     if (target === toRaw(receiver)) {
