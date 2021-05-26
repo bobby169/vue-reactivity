@@ -7,13 +7,14 @@ import { CollectionTypes } from './collectionHandlers'
 export declare const RefSymbol: unique symbol
 
 export interface Ref<T = any> {
+  // 有一个value来存储数据
   value: T
   /**
    * Type differentiator only.
    * We need this to be in public d.ts but don't want it to show up in IDE
    * autocomplete, so we use a private Symbol instead.
    */
-  [RefSymbol]: true
+  [RefSymbol]: true // 私有类型标识为Ref
   /**
    * @internal
    */
@@ -27,6 +28,7 @@ export type ToRefs<T = any> = {
   [K in keyof T]: T[K] extends Ref ? T[K] : Ref<UnwrapRef<T[K]>>
 }
 
+// 如果传递的值是个对象(包含数组/Map/Set/WeakMap/WeakSet)，则使用reactive执行，否则返回原数据
 const convert = <T extends unknown>(val: T): T =>
   isObject(val) ? reactive(val) : val
 
@@ -54,27 +56,35 @@ export function shallowRef(value?: unknown) {
 class RefImpl<T> {
   private _value: T
 
+  // 用isRef(computed)时，是true
   public readonly __v_isRef = true
 
   constructor(private _rawValue: T, public readonly _shallow = false) {
+    // 如果是shallow浅的，则直接返回value，否则转化成reactive
     this._value = _shallow ? _rawValue : convert(_rawValue)
   }
 
   get value() {
+    // 收集target为this自身的依赖dep
     track(toRaw(this), TrackOpTypes.GET, 'value')
+    // 获取值时，直接返回处理后的this._value
     return this._value
   }
 
   set value(newVal) {
+    // 如果新值不等于旧值，才进行数据更新后触发
     if (hasChanged(toRaw(newVal), this._rawValue)) {
       this._rawValue = newVal
+      // 数据变化，重新设置新值
       this._value = this._shallow ? newVal : convert(newVal)
+      // 触发所有监听函数
       trigger(toRaw(this), TriggerOpTypes.SET, 'value', newVal)
     }
   }
 }
 
 function createRef(rawValue: unknown, shallow = false) {
+  // 如果已经标识是Ref了，则直接返回值
   if (isRef(rawValue)) {
     return rawValue
   }
@@ -118,6 +128,27 @@ export type CustomRefFactory<T> = (
   set: (value: T) => void
 }
 
+/**
+ * 自定义CustomRef接口，它需要一个工厂函数，该函数接收 track 和 trigger 函数作为参数，并且应该返回一个带有 get 和 set 的对象
+ * function useDebouncedRef(value, delay = 200) {
+    let timeout
+    return customRef((track, trigger) => {
+      return {
+        get() {
+          track() // 手动触发track()
+          return value
+        },
+        set(newValue) {
+          clearTimeout(timeout)
+          timeout = setTimeout(() => {
+            value = newValue
+            trigger() // 在异步操作手动触发trigger()
+          }, delay)
+        }
+      }
+    })
+  }
+ */
 class CustomRefImpl<T> {
   private readonly _get: ReturnType<CustomRefFactory<T>>['get']
   private readonly _set: ReturnType<CustomRefFactory<T>>['set']
@@ -134,10 +165,12 @@ class CustomRefImpl<T> {
   }
 
   get value() {
+    // 获取value值时，直接返回factory返回对象中的get()方法
     return this._get()
   }
 
   set value(newVal) {
+    // 设置新值newVal值时，直接调用factory返回对象中的set(newVal)方法
     this._set(newVal)
   }
 }
@@ -151,6 +184,7 @@ export function toRefs<T extends object>(object: T): ToRefs<T> {
     console.warn(`toRefs() expects a reactive object but received a plain one.`)
   }
   const ret: any = isArray(object) ? new Array(object.length) : {}
+  // 遍历对象的所有key，将其值转化为Ref数据，方便对对象进行解构操作
   for (const key in object) {
     ret[key] = toRef(object, key)
   }
@@ -162,11 +196,15 @@ class ObjectRefImpl<T extends object, K extends keyof T> {
 
   constructor(private readonly _object: T, private readonly _key: K) {}
 
+  // toRef(reactive)中的object已经是响应式的了，已经有了track和trigger了。所以没有必要再添加
+
   get value() {
+    // 注意，这里没用到track，直接返回对象key的值
     return this._object[this._key]
   }
 
   set value(newVal) {
+    // 注意，这里没用到trigger，重新对对象的key赋新值
     this._object[this._key] = newVal
   }
 }
