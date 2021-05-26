@@ -122,7 +122,7 @@ function createReactiveEffect<T = any>(
         effectStack.push(effect)
         // 当前活动的effect为此创建的effect
         activeEffect = effect
-        // 执行原始函数并返回
+        // 执行原始函数并返回，比如effect(() => {console.info(3)})，这里会执行effect里面的函数
         return fn()
       } finally {
         // 执行完以后将effect从栈中推出

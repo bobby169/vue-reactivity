@@ -20,13 +20,16 @@ export interface WritableComputedOptions<T> {
   set: ComputedSetter<T>
 }
 
+// computed内部实现是用的effect()函数，返回计算结果值。相当于对effect()函数进行了重新包装，只是得到reactive返回的计算值
 class ComputedRefImpl<T> {
   private _value!: T
   private _dirty = true
 
   public readonly effect: ReactiveEffect<T>
 
+  // 用isRef(computed)时，是true
   public readonly __v_isRef = true;
+  // 标记readonly是否为true，如果computed只是一个函数，则为true。否则为false
   public readonly [ReactiveFlags.IS_READONLY]: boolean
 
   constructor(
@@ -34,11 +37,13 @@ class ComputedRefImpl<T> {
     private readonly _setter: ComputedSetter<T>,
     isReadonly: boolean
   ) {
+    // computed内部有一个effect监听函数
     this.effect = effect(getter, {
       lazy: true,
       scheduler: () => {
         if (!this._dirty) {
           this._dirty = true
+          // 触发TriggerOpTypes.SET类型
           trigger(toRaw(this), TriggerOpTypes.SET, 'value')
         }
       }
@@ -51,22 +56,29 @@ class ComputedRefImpl<T> {
     // the computed ref may get wrapped by other proxies e.g. readonly() #3376
     const self = toRaw(this)
     if (self._dirty) {
-      self._value = this.effect()
+      // 把effect()函数返回的值保存到_value中
+      self._value = this.effect() // 延迟执行effect()函数中的函数，一定会得到computed返回值
       self._dirty = false
     }
+    // 继续收集target为self自身的依赖dep
     track(self, TrackOpTypes.GET, 'value')
+    // 返回self._value值
     return self._value
   }
 
+  // 如果computed中有set方法，则直接把newValue放到set中
   set value(newValue: T) {
     this._setter(newValue)
   }
 }
-
+// 函数重载
+// 入参为getter函数
 export function computed<T>(getter: ComputedGetter<T>): ComputedRef<T>
+// 入参为配置项
 export function computed<T>(
   options: WritableComputedOptions<T>
 ): WritableComputedRef<T>
+// 真正的函数实现
 export function computed<T>(
   getterOrOptions: ComputedGetter<T> | WritableComputedOptions<T>
 ) {
@@ -74,6 +86,7 @@ export function computed<T>(
   let setter: ComputedSetter<T>
 
   if (isFunction(getterOrOptions)) {
+    // 如果computed是一个函数，则只有setter
     getter = getterOrOptions
     setter = __DEV__
       ? () => {
@@ -81,6 +94,7 @@ export function computed<T>(
         }
       : NOOP
   } else {
+    // 否则即有getter，也有setter
     getter = getterOrOptions.get
     setter = getterOrOptions.set
   }
