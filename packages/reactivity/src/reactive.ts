@@ -217,6 +217,8 @@ function createReactiveObject(
     target,
     targetType === TargetType.COLLECTION ? collectionHandlers : baseHandlers
   )
+
+  // 注意proxyMap 中，target为key，value为proxy，能过target能找到对应的proxy
   proxyMap.set(target, proxy)
 
   console.info(
@@ -225,10 +227,10 @@ function createReactiveObject(
   ) // undefined
   // 思考，这里的proxy[ReactiveFlags.IS_REACTIVE]是怎么产生的？
   // proxy原本是没有ReactiveFlags.IS_REACTIVE这个key的，通过get获取proxy属性就会传这个key到hander中
-  // console.info(
-  //   proxy[ReactiveFlags.IS_REACTIVE2],
-  //   'proxy[ReactiveFlags.IS_REACTIVE2]'
-  // ) // true
+  console.info(
+    proxy[ReactiveFlags.IS_REACTIVE2],
+    'proxy[ReactiveFlags.IS_REACTIVE2]'
+  )
   console.info(
     proxy[ReactiveFlags.IS_REACTIVE],
     'proxy[ReactiveFlags.IS_REACTIVE]'

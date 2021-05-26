@@ -96,6 +96,8 @@ function createGetter(isReadonly = false, shallow = false) {
     } else if (key === ReactiveFlags.IS_READONLY) {
       return isReadonly // 返回proxy[ReactiveFlags.IS_READONLY] = false
     } else if (
+      // 如果key是ReactiveFlags.RAW，并且receiver 与 proxyMap.get(target)相等，则返回target。供toRaw()方法调用
+      // 在proxyMap中我们可以通过key为target找到proxy，也能通过toRaw()方法找到target原始对象。双向互找
       key === ReactiveFlags.RAW &&
       receiver ===
         (isReadonly
