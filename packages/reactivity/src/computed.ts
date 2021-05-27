@@ -38,6 +38,9 @@ class ComputedRefImpl<T> {
     isReadonly: boolean
   ) {
     // computed内部有一个effect监听函数
+    // const value = reactive<{ foo?: number }>({})
+    // const cValue = computed(() => value.foo)
+    // stop(cValue.effect) // 可以用stop(computed.effect)来停止监听
     this.effect = effect(getter, {
       lazy: true,
       scheduler: () => {
@@ -62,7 +65,10 @@ class ComputedRefImpl<T> {
     }
     // 继续收集target为self自身的依赖dep
     track(self, TrackOpTypes.GET, 'value')
-    // 返回self._value值
+    // 返回self._value值，对ref()后的computed要加.value获取值
+    // const a = ref(1)
+    // const b = computed(() => a + 1)
+    // console.info(b.value)
     return self._value
   }
 
