@@ -89,7 +89,7 @@ function createGetter(isReadonly = false, shallow = false) {
     // 这里比较巧妙，动态判断
     // proxy后的对象相当于添加了ReactiveFlags属性，用于判断对象是否是reactive或是readonly供isReactive()和isReadonly()使用
     console.log(key, 'GetKey')
-    console.log(receiver, 'receiver')
+    // console.log(receiver, 'receiver')
     if (key === ReactiveFlags.IS_REACTIVE) {
       console.log('判断当前target是否是proxy')
       return !isReadonly // 返回proxy[ReactiveFlags.IS_REACTIVE] = true
@@ -123,7 +123,7 @@ function createGetter(isReadonly = false, shallow = false) {
     // 确实，target[key]好像就能实现效果了，为什么要用Reflect，还要传个receiver呢？原因在于原始数据的get并没有大家想的这么简单
     // 利用Reflect，可方便的把现有操作行为原模原样地反射到目标对象上，又保证真实的作用域（通过第三个参数receiver）。这个receiver即是生成的代理对象
     const res = Reflect.get(target, key, receiver) //receiver传给Reflect.get，保留了对正确引用this
-    console.log(res, receiver, key, 'res')
+    // console.log(res, receiver, key, 'res')
     console.log(target === receiver, 'target === receiver') // false
     console.log(target === toRaw(receiver), 'target === toRaw(receiver)') // 一般是true
 
@@ -256,6 +256,7 @@ export const mutableHandlers: ProxyHandler<object> = {
   ownKeys
 }
 
+// readonly后，set和delete会报错误提示
 export const readonlyHandlers: ProxyHandler<object> = {
   get: readonlyGet,
   set(target, key) {

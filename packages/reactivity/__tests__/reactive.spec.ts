@@ -197,7 +197,7 @@ describe('reactivity/reactive', () => {
     // writable
     const b = computed({
       get: () => 1,
-      set: () => {}
+      set: () => {} // 不会执行setter
     })
     const obj = reactive({ a, b })
     // check type

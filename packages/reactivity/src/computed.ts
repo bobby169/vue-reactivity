@@ -21,6 +21,10 @@ export interface WritableComputedOptions<T> {
 }
 
 // computed内部实现是用的effect()函数，返回计算结果值。相当于对effect()函数进行了重新包装，只是得到reactive返回的计算值
+// computed中有effect函数，所以会有副作用存在，在组件component的setup中，会有：
+// const c = _computed(getterOrOptions as any)
+// recordInstanceBoundEffect(c.effect)
+// 记录所有的effect，在组件unmount后，对用stop()清除副作用
 class ComputedRefImpl<T> {
   private _value!: T
   private _dirty = true

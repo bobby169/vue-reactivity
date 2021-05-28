@@ -13,6 +13,11 @@ import {
 } from './collectionHandlers'
 import { UnwrapRef, Ref } from './ref'
 
+// 一个proxy可以同时是reactive和readonly
+// const a = reactive({})
+// const b = readonly(a)
+// expect(isReadonly(b)).toBe(true)
+// expect(isReactive(b)).toBe(true)
 export const enum ReactiveFlags {
   SKIP = '__v_skip',
   IS_REACTIVE = '__v_isReactive',
@@ -60,6 +65,22 @@ function targetTypeMap(rawType: string) {
       return TargetType.INVALID
   }
 }
+
+// // 新对象默认是可扩展的.
+// var empty = {};
+// Object.isExtensible(empty); // === true
+
+// // ...可以变的不可扩展.
+// Object.preventExtensions(empty);
+// Object.isExtensible(empty); // === false
+
+// // 密封对象是不可扩展的.
+// var sealed = Object.seal({});
+// Object.isExtensible(sealed); // === false
+
+// // 冻结对象也是不可扩展.
+// var frozen = Object.freeze({});
+// Object.isExtensible(frozen); // === false
 
 function getTargetType(value: Target) {
   return value[ReactiveFlags.SKIP] || !Object.isExtensible(value)
@@ -209,6 +230,7 @@ function createReactiveObject(
   }
   // only a whitelist of value types can be observed.
   const targetType = getTargetType(target)
+  // 如果target标记为ReactiveFlags.SKIP，直接返回target
   if (targetType === TargetType.INVALID) {
     return target
   }
@@ -235,8 +257,8 @@ function createReactiveObject(
     proxy[ReactiveFlags.IS_REACTIVE],
     'proxy[ReactiveFlags.IS_REACTIVE]'
   )
-  console.info(proxy[ReactiveFlags.RAW], 'proxy[ReactiveFlags.RAW]')
-  console.info(proxy[ReactiveFlags.SKIP], 'proxy[ReactiveFlags.SKIP]')
+  // console.info(proxy[ReactiveFlags.RAW], 'proxy[ReactiveFlags.RAW]')
+  // console.info(proxy[ReactiveFlags.SKIP], 'proxy[ReactiveFlags.SKIP]')
   return proxy
 }
 

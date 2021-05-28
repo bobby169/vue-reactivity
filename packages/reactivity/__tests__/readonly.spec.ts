@@ -329,6 +329,7 @@ describe('reactivity/readonly', () => {
     const a = readonly({})
     const b = reactive(a)
     expect(isReadonly(b)).toBe(true)
+    expect(isReactive(b)).toBe(false)
     // should point to same original
     expect(toRaw(a)).toBe(toRaw(b))
   })
@@ -337,6 +338,7 @@ describe('reactivity/readonly', () => {
     const a = reactive({})
     const b = readonly(a)
     expect(isReadonly(b)).toBe(true)
+    expect(isReactive(b)).toBe(true)
     // should point to same original
     expect(toRaw(a)).toBe(toRaw(b))
   })
@@ -346,6 +348,7 @@ describe('reactivity/readonly', () => {
     const b = readonly(a)
     // should return true since it's wrapping a reactive source
     expect(isReactive(b)).toBe(true)
+    expect(isReadonly(b)).toBe(true)
 
     let dummy
     effect(() => {
@@ -390,6 +393,7 @@ describe('reactivity/readonly', () => {
     const b = readonly(a)
     // should return true since it's wrapping a reactive source
     expect(isReactive(b)).toBe(true)
+    expect(isReadonly(b)).toBe(true)
 
     a.set('foo', 1)
 
@@ -423,7 +427,10 @@ describe('reactivity/readonly', () => {
       bar: markRaw({ b: 2 })
     })
     expect(isReadonly(obj.foo)).toBe(true)
+    expect(isReactive(obj.foo)).toBe(false)
+
     expect(isReactive(obj.bar)).toBe(false)
+    expect(isReadonly(obj.bar)).toBe(false)
   })
 
   test('should make ref readonly', () => {

@@ -53,6 +53,7 @@ export function shallowRef(value?: unknown) {
   return createRef(value, true)
 }
 
+// 创建ref和reactive是不同的，没有Proxy。直接设置get和set，并track收集依赖和trigger触发更改
 class RefImpl<T> {
   private _value: T
 
