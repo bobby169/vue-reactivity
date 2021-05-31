@@ -4,8 +4,26 @@ import { effect } from '../src/effect'
 
 describe('shallowReactive', () => {
   test('should not make non-reactive properties reactive', () => {
-    const props = shallowReactive({ n: { foo: 1 } })
+    // TODO 怎么跟理解的不一样？
+    const raw = { n: { foo: 1 }, m: 1 }
+    const props = shallowReactive(raw)
+    let a, b
+    effect(() => {
+      a = props.n.foo
+      b = props.m
+    })
+    props.n.foo++
+    expect(props.n.foo).toBe(2)
     expect(isReactive(props.n)).toBe(false)
+    props.m++
+    expect(props.m).toBe(2)
+    expect(isReactive(props.m)).toBe(false)
+
+    props.n.foo++
+    props.m++
+    expect(a).toBe(3)
+    expect(b).toBe(3)
+    console.log(raw)
   })
 
   test('should keep reactive properties reactive', () => {
