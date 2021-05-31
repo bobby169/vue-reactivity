@@ -342,6 +342,7 @@ export function trigger(
         oldTarget
       })
     }
+    // 如果有scheduler调度器，用scheduler调度器执行effect，否则自执行effect()
     if (effect.options.scheduler) {
       effect.options.scheduler(effect)
     } else {
