@@ -47,7 +47,7 @@ const enum TargetType {
 }
 
 /**
- * 只有下面的白名单才能设置reactive，并判断target是否是COLLECTION，以便proxy调用COLLECTION数据代理
+ * 只有下面的白名单才能设置reactive，并判断target是否是COLLECTION，以便proxy调用COLLECTION数据代理，test
  * @param rawType
  * @returns
  */
